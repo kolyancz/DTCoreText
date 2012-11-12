@@ -638,6 +638,10 @@
 		{
 			_displayStyle = DTHTMLElementDisplayStyleListItem;
 		}
+		else if ([displayString isEqualToString:@"table"])
+		{
+			_displayStyle = DTHTMLElementDisplayStyleTable;
+		}
 		else if ([verticalAlignment isEqualToString:@"inherit"])
 		{
 			// nothing to do
@@ -674,8 +678,7 @@
 	
 	if (webkitPaddingStart)
 	{
-		padding.left = [webkitPaddingStart pixelSizeOfCSSMeasureRelativeToCurrentTextSize:self.fontDescriptor.pointSize];
-		self.paragraphStyle.listIndent = padding.left;
+		self.paragraphStyle.listIndent = [webkitPaddingStart pixelSizeOfCSSMeasureRelativeToCurrentTextSize:self.fontDescriptor.pointSize];
 	}
 	
 	BOOL needsTextBlock = (backgroundColor!=nil);
@@ -917,7 +920,7 @@
 	newObject.tagContentInvisible = self.tagContentInvisible;
 	newObject.textColor = self.textColor;
 	newObject.isColorInherited = YES;
-	newObject.backgroundColor = self.backgroundColor;
+	
 	newObject.strikeOut = self.strikeOut;
 	newObject.superscriptStyle = self.superscriptStyle;
 	newObject.shadows = self.shadows;

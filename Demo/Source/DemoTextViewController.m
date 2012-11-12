@@ -116,12 +116,13 @@
 	};
 	
 	NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithFloat:1.0], NSTextSizeMultiplierDocumentOption, [NSValue valueWithCGSize:maxImageSize], DTMaxImageSize,
-													 @"Times New Roman", DTDefaultFontFamily,  @"purple", DTDefaultLinkColor, baseURL, NSBaseURLDocumentOption, callBackBlock, DTWillFlushBlockCallBack, nil]; 
+													 @"Times New Roman", DTDefaultFontFamily,  @"purple", DTDefaultLinkColor, callBackBlock, DTWillFlushBlockCallBack, nil]; 
 	
 	NSAttributedString *string = [[NSAttributedString alloc] initWithHTMLData:data options:options documentAttributes:NULL];
 	
 	// Display string
 	_textView.contentView.edgeInsets = UIEdgeInsetsMake(10, 10, 10, 10);
+	_textView.contentView.shouldDrawLinks = NO; // we draw them in DTLinkButton
 	_textView.attributedString = string;
 }
 
@@ -241,12 +242,34 @@
 
 
 #pragma mark Custom Views on Text
-- (UIView *)attributedTextContentView:(DTAttributedTextContentView *)attributedTextContentView viewForLink:(NSURL *)url identifier:(NSString *)identifier frame:(CGRect)frame
+
+- (UIView *)attributedTextContentView:(DTAttributedTextContentView *)attributedTextContentView viewForAttributedString:(NSAttributedString *)string frame:(CGRect)frame
 {
+	NSDictionary *attributes = [string attributesAtIndex:0 effectiveRange:NULL];
+	
+	NSURL *URL = [attributes objectForKey:DTLinkAttribute];
+	NSString *identifier = [attributes objectForKey:DTGUIDAttribute];
+	
+	
 	DTLinkButton *button = [[DTLinkButton alloc] initWithFrame:frame];
-	button.URL = url;
+	button.URL = URL;
 	button.minimumHitSize = CGSizeMake(25, 25); // adjusts it's bounds so that button is always large enough
 	button.GUID = identifier;
+	
+	// we draw the contents ourselves
+	button.attributedString = string;
+	
+	// make a version with different text color
+	NSMutableAttributedString *highlightedString = [string mutableCopy];
+	
+	NSRange range = NSMakeRange(0, highlightedString.length);
+	
+	NSDictionary *highlightedAttributes = [NSDictionary dictionaryWithObject:(__bridge id)[UIColor redColor].CGColor forKey:(id)kCTForegroundColorAttributeName];
+	
+	
+	[highlightedString addAttributes:highlightedAttributes range:range];
+	
+	button.highlightedAttributedString = highlightedString;
 	
 	// use normal push action for opening URL
 	[button addTarget:self action:@selector(linkPushed:) forControlEvents:UIControlEventTouchUpInside];
@@ -360,6 +383,7 @@
 	}
 	else if (attachment.contentType == DTTextAttachmentTypeIframe)
 	{
+		frame.origin.x += 50;
 		DTWebVideoView *videoView = [[DTWebVideoView alloc] initWithFrame:frame];
 		videoView.attachment = attachment;
 		
