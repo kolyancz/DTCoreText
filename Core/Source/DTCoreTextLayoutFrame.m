@@ -8,6 +8,7 @@
 
 #import "DTCoreText.h"
 #import "DTCoreTextLayoutFrame.h"
+#import "DTVersion.h"
 
 // global flag that shows debug frames
 static BOOL _DTCoreTextLayoutFramesShouldDrawDebugFrames = NO;
@@ -235,6 +236,7 @@ static BOOL _DTCoreTextLayoutFramesShouldDrawDebugFrames = NO;
 		CGFloat maxLineHeight = 0;
 		
 		BOOL usesSyntheticLeading = NO;
+		BOOL usesForcedLineHeight = NO;
 		
 		if (currentLineMetrics.leading == 0.0f)
 		{
@@ -260,6 +262,7 @@ static BOOL _DTCoreTextLayoutFramesShouldDrawDebugFrames = NO;
 		{
 			if (lineHeight<minLineHeight)
 			{
+				usesForcedLineHeight = YES;
 				lineHeight = minLineHeight;
 			}
 		}
@@ -321,6 +324,7 @@ static BOOL _DTCoreTextLayoutFramesShouldDrawDebugFrames = NO;
 		{
 			if (maxLineHeight>0 && lineHeight>maxLineHeight)
 			{
+				usesForcedLineHeight = YES;
 				lineHeight = maxLineHeight;
 			}
 		}
@@ -417,6 +421,13 @@ static BOOL _DTCoreTextLayoutFramesShouldDrawDebugFrames = NO;
 		
 		lineRange.location += lineRange.length;
 		
+		// if there is a custom line height we need to adjust the ascender too
+		if (usesForcedLineHeight)
+		{
+			// causes the line frame to encompass also the extra space
+			newLine.ascent = lineHeight;
+		}
+		
 		previousLine = newLine;
 	//previousLineMetrics = currentLineMetrics;
 	} 
@@ -496,9 +507,7 @@ static BOOL _DTCoreTextLayoutFramesShouldDrawDebugFrames = NO;
 	//[self _correctLineOrigins];
 	
 	// --- begin workaround for image squishing bug in iOS < 4.2
-	DTSimpleVersion version = [[UIDevice currentDevice] osVersion];
-	
-	if (version.major<4 || (version.major==4 && version.minor < 2))
+	if ([DTVersion osVersionIsLessThen:@"4.2"])
 	{
 		[self _correctAttachmentHeights];
 	}
@@ -672,7 +681,7 @@ static BOOL _DTCoreTextLayoutFramesShouldDrawDebugFrames = NO;
 	return frame;
 }
 
-- (void)drawInContext:(CGContextRef)context drawImages:(BOOL)drawImages
+- (void)drawInContext:(CGContextRef)context drawImages:(BOOL)drawImages drawLinks:(BOOL)drawLinks
 {
 	CGContextSaveGState(context);
 	
@@ -795,6 +804,10 @@ static BOOL _DTCoreTextLayoutFramesShouldDrawDebugFrames = NO;
 				runIndex ++;
 			}
 			
+			if (!drawLinks && oneRun.isHyperlink)
+			{
+				continue;
+			}
 			
 			CGColorRef backgroundColor = (__bridge CGColorRef)[oneRun.attributes objectForKey:DTBackgroundColorAttribute];
 			
@@ -926,6 +939,11 @@ static BOOL _DTCoreTextLayoutFramesShouldDrawDebugFrames = NO;
 		for (DTCoreTextGlyphRun *oneRun in oneLine.glyphRuns)
 		{
 			if (!CGRectIntersectsRect(rect, oneRun.frame))
+			{
+				continue;
+			}
+			
+			if (!drawLinks && oneRun.isHyperlink)
 			{
 				continue;
 			}

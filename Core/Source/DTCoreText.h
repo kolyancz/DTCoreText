@@ -4,6 +4,9 @@
 #import <ApplicationServices/ApplicationServices.h>
 #endif
 
+// DTFoundation
+#import "DTFoundation.h"
+
 // global constants
 #import "DTCoreTextConstants.h"
 #import "DTCompatibility.h"
@@ -23,13 +26,11 @@
 #import "DTHTMLElement.h"
 #import "DTTextAttachment.h"
 #import "NSCharacterSet+HTML.h"
-#import "NSData+DTBase64.h"
 #import "NSScanner+HTML.h"
 #import "NSMutableString+HTML.h"
 #import "NSString+CSS.h"
 #import "NSString+HTML.h"
 #import "NSString+Paragraphs.h"
-#import "NSString+UTF8Cleaner.h"
 #import "DTCoreTextParagraphStyle.h"
 #import "NSMutableAttributedString+HTML.h"
 #import "NSAttributedString+HTML.h"
@@ -46,8 +47,6 @@
 #import "DTLinkButton.h"
 #import "DTWebVideoView.h"
 #import "NSAttributedStringRunDelegates.h"
-
-#import "UIDevice+DTSimpleVersion.h"
 
 #import "DTAttributedTextCell.h"
 #import "DTAttributedTextContentView.h"
